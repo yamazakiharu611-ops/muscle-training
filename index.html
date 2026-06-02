@@ -1,7 +1,179 @@
-<!doctype html>
-<meta charset=
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Portfolio - 自己紹介</title>
+    <style>
+        /* 基本スタイル（スマホファースト） */
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        header {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        nav {
+            background-color: #34495e;
+            padding: 10px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        section {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 0;
+            font-size: 1.4rem;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .work-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ddd;
+        }
+        .work-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: #fff;
+            font-size: 0.8rem;
+            margin-top: 40px;
+        }
+        /* ボタンとインタラクション用のスタイル */
+        .btn {
+            display: inline-block;
+            background-color: #3498db;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        #message-area {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            display: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
 
-"utf-8">
-<title>自己紹介</title>
-<h1>自己紹介</h1>
-<p>授業で作成したページです。</p>
+    <header>
+        <h1>My Portfolio</h1>
+    </header>
+
+    <nav>
+        <a href="#about">About</a>
+        <a href="#skills">Skills</a>
+        <a href="#works">Works</a>
+        <a href="#reflection">Reflection</a>
+    </nav>
+
+    <main>
+        <section id="about">
+            <h2>About</h2>
+            <p>はじめまして！このウェブサイトは、授業の演習の一環として作成した自己紹介ページです。</p>
+            <p>現在はWebサイト制作やプログラミングの基礎について学んでいます。新しい技術に触れ、実際に動く形にする楽しさを実感しています。</p>
+        </section>
+
+        <section id="skills">
+            <h2>Skills</h2>
+            <ul>
+                <li><strong>HTML / CSS:</strong> 基本的なタグの使い方や、スマートフォンの画面サイズに対応したレイアウト（レスポンシブデザイン）を学習中です。</li>
+                <li><strong>JavaScript:</strong> 簡単なイベント処理（ボタンをクリックした際の動きなど）を学んでいます。</li>
+                <li><strong>ツール:</strong> VS Code / GitHub / GitHub Desktop</li>
+            </ul>
+        </section>
+
+        <section id="works">
+            <h2>Works</h2>
+            <div class="work-item">
+                <h3>1. 自己紹介Webサイト（本サイト）</h3>
+                <p>HTML、CSS、JavaScriptを1つのファイルにまとめ、スマートフォンからでも見やすくなるように工夫して制作した初めてのWebサイトです。</p>
+            </div>
+            <div class="work-item">
+                <h3>2. 今後の課題・成果物</h3>
+                <p>これからの授業や演習を通じて制作した作品や、新しく挑戦したプログラムをここに追加していく予定です。</p>
+            </div>
+        </section>
+
+        <section id="reflection">
+            <h2>Reflection</h2>
+            <p>今回の演習を通じて、GitでのコミットやGitHubへのプッシュなど、Webサイトをインターネット上に公開するまでの一連のワークフローを体験することができました。</p>
+            <p>最初は専門用語や操作に戸惑うこともありましたが、実際に自分の作ったページがブラウザで表示されると達成感があります。今後はデザインだけでなく、JavaScriptを使った動きのある機能にもさらに挑戦してみたいです。</p>
+            
+            <button class="btn" onclick="showMessage()">クリックして挨拶を表示</button>
+            <div id="message-area">ご覧いただきありがとうございました！演習をがんばります！</div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Web Design Class. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // ボタンがクリックされたときにメッセージを表示する関数
+        function showMessage() {
+            const messageArea = document.getElementById('message-area');
+            if (messageArea.style.display === 'block') {
+                messageArea.style.display = 'none';
+            } else {
+                messageArea.style.display = 'block';
+            }
+        }
+    </script>
+
+</body>
+</html>
