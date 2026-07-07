@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>筋トレ実績の履歴</h2>
+{% if records %}
+    <table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%; text-align: left;">
+        <tr style="background-color: #eee;">
+            <th>日付</th>
+            <th>部位</th>
+            <th>種目</th>
+            <th>身長/体重</th>
+            <th>BMI</th>
+            <th>重量/回数</th>
+            <th style="color: #d9534f;">推定1RM 🔥</th>
+        </tr>
+        {% for r in records %}
+        <tr>
+            <td>{{ r.date }}</td>
+            <td>{{ r.part }}</td>
+            <td>{{ r.exercise }}</td>
+            <td>{{ r.height }}cm / {{ r.weight }}kg</td>
+            <td>{{ r.bmi }}</td>
+            <td>{{ r.weight }}kg × {{ r.reps }}回</td>
+            <td style="font-weight: bold; color: #d9534f;">{{ r.rm }} kg</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>記録がありません。</p>
+{% endif %}
+{% endblock %}
