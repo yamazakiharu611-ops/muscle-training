@@ -12,9 +12,12 @@
         nav button { background: none; border: none; color: #f8f9fa; font-weight: bold; font-size: 16px; margin-left: 20px; cursor: pointer; padding: 5px 10px; }
         nav button:hover { color: #ffc107; }
         nav button.active-nav { color: #ffc107; border-bottom: 2px solid #ffc107; }
-        .container { max-width: 800px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 200px; }
+        
+        /* 初期状態でもちゃんと見えるように、基本スタイルを調整 */
         .tab-content { display: none; }
-        .tab-content.active-content { display: block; }
+        .tab-content.active-content { display: block !important; }
+        
         h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-top: 0; color: #007bff; }
         label { display: block; margin-top: 15px; font-weight: bold; }
         input, select, .form-btn { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
@@ -38,7 +41,7 @@
 
     <div class="container">
         
-        <div id="tab-history" class="tab-content">
+        <div id="tab-history" class="tab-content active-content">
             <h2>筋トレ実績の履歴</h2>
             {% if records %}
                 <table>
@@ -175,17 +178,33 @@
 
     <script>
         function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-content'));
+            // すべてのコンテンツをいったん非表示にする
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(el => el.style.display = 'none');
+            contents.forEach(el => el.classList.remove('active-content'));
+            
+            // すべてのナビボタンの選択中スタイルを外す
             document.querySelectorAll('nav button').forEach(el => el.classList.remove('active-nav'));
-            document.getElementById('tab-' + tabName).classList.add('active-content');
-            document.getElementById('btn-' + tabName).classList.add('active-nav');
+            
+            // 選択されたタブだけを表示する
+            const targetContent = document.getElementById('tab-' + tabName);
+            if (targetContent) {
+                targetContent.style.display = 'block';
+                targetContent.classList.add('active-content');
+            }
+            
+            const targetBtn = document.getElementById('btn-' + tabName);
+            if (targetBtn) {
+                targetBtn.classList.add('active-nav');
+            }
         }
 
-        const exerciseData = {{ exercise_data | tojson }};
+        const exerciseData = {{ exercise_data | tojson if exercise_data else '{}' }};
         const partSelect = document.getElementById('part-select');
         const exerciseSelect = document.getElementById('exercise-select');
 
         function updateExercises() {
+            if (!partSelect || !exerciseSelect) return;
             const selectedPart = partSelect.value;
             const exercises = exerciseData[selectedPart] || [];
             exerciseSelect.innerHTML = '';
@@ -197,10 +216,15 @@
             });
         }
 
-        partSelect.addEventListener('change', updateExercises);
+        if (partSelect) {
+            partSelect.addEventListener('change', updateExercises);
+        }
+        
         window.addEventListener('DOMContentLoaded', () => {
             updateExercises();
-            switchTab('{{ active_tab }}');
+            // Pythonから渡されたタブ、またはデフォルトで履歴タブを開く
+            const initialTab = '{{ active_tab }}' || 'history';
+            switchTab(initialTab);
         });
     </script>
 </body>
