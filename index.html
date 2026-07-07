@@ -1,30 +1,113 @@
-{% extends 'layout.html' %}
-{% block content %}
-<h2>筋トレ実績の履歴</h2>
-{% if records %}
-    <table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%; text-align: left;">
-        <tr style="background-color: #eee;">
-            <th>日付</th>
-            <th>部位</th>
-            <th>種目</th>
-            <th>身長/体重</th>
-            <th>BMI</th>
-            <th>重量/回数</th>
-            <th style="color: #d9534f;">推定1RM 🔥</th>
-        </tr>
-        {% for r in records %}
-        <tr>
-            <td>{{ r.date }}</td>
-            <td>{{ r.part }}</td>
-            <td>{{ r.exercise }}</td>
-            <td>{{ r.height }}cm / {{ r.weight }}kg</td>
-            <td>{{ r.bmi }}</td>
-            <td>{{ r.weight }}kg × {{ r.reps }}回</td>
-            <td style="font-weight: bold; color: #d9534f;">{{ r.rm }} kg</td>
-        </tr>
-        {% endfor %}
-    </table>
-{% else %}
-    <p>記録がありません。</p>
-{% endif %}
-{% endblock %}
+from flask import Flask, render_template, request, redirect, url_for
+from datetime import datetime
+
+app = Flask(__name__)
+
+EXERCISE_DATA = {
+    '胸': ['ベンチプレス', 'インクラインダンベルプレス', 'ダンベルフライ', 'プッシュアップ'],
+    '腕': ['バーベルカール', 'インクラインダンベルカール', 'スカルクラッシャー'],
+    '肩': ['ショルダープレス', 'サイドレイズ', 'フロントレイズ'],
+    '背中': ['デッドリフト', 'ラットプルダウン', '懸垂（チンニング）'],
+    '足': ['スクワット', 'レッグプレス', 'レッグエクステンション']
+}
+
+records = []
+
+def calculate_1rm(weight, reps):
+    if reps == 1: return weight
+    return round(weight * (1 + reps / 30), 1)
+
+def calculate_bmi(height_cm, weight_kg):
+    if height_cm <= 0: return 0
+    height_m = height_cm / 100
+    return round(weight_kg / (height_m * height_m), 1)
+
+def calculate_target_weights(gender, body_weight, exercise):
+    if exercise == 'ベンチプレス':
+        factors = [0.7, 1.0, 1.5] if gender == 'male' else [0.35, 0.5, 0.75]
+    elif exercise == 'スクワット':
+        factors = [1.0, 1.5, 2.0] if gender == 'male' else [0.6, 1.0, 1.4]
+    elif exercise == 'デッドリフト':
+        factors = [1.2, 1.8, 2.3] if gender == 'male' else [0.7, 1.2, 1.7]
+    else:
+        factors = [0.4, 0.6, 0.9] if gender == 'male' else [0.2, 0.35, 0.5]
+        
+    return {
+        '初級者': round(body_weight * factors[0], 1),
+        '中級者': round(body_weight * factors[1], 1),
+        '上級者': round(body_weight * factors[2], 1)
+    }
+
+# すべての共通データを一度に返す関数
+def get_common_context():
+    all_exercises = []
+    for es in EXERCISE_DATA.values(): all_exercises.extend(es)
+    return {
+        'records': records,
+        'today': datetime.today().strftime('%Y-%m-%d'),
+        'exercise_data': EXERCISE_DATA,
+        'all_exercises': sorted(list(set(all_exercises)))
+    }
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    ctx = get_common_context()
+    
+    # ページ表示時の初期タブを指定
+    ctx['active_tab'] = 'history'
+
+    if request.method == 'POST':
+        # 1. 新種目の追加処理
+        if 'add_exercise' in request.form:
+            new_part = request.form.get('new_part')
+            new_exercise = request.form.get('new_exercise').strip()
+            if new_exercise and new_exercise not in EXERCISE_DATA[new_part]:
+                EXERCISE_DATA[new_part].append(new_exercise)
+            ctx = get_common_context() # データ更新
+            ctx['active_tab'] = 'record'
+            return render_template('index.html', **ctx)
+
+        # 2. 実績記録の保存処理
+        if 'weight' in request.form and 'reps' in request.form:
+            date = request.form.get('date')
+            part = request.form.get('part')
+            exercise = request.form.get('exercise')
+            weight = float(request.form.get('weight'))
+            reps = int(request.form.get('reps'))
+            height = float(request.form.get('height'))
+            
+            rm = calculate_1rm(weight, reps)
+            bmi = calculate_bmi(height, weight)
+            
+            records.append({
+                'date': date, 'part': part, 'exercise': exercise, 
+                'weight': weight, 'reps': reps, 'height': height, 
+                'rm': rm, 'bmi': bmi
+            })
+            ctx = get_common_context()
+            ctx['active_tab'] = 'history'
+            return render_template('index.html', **ctx)
+
+        # 3. 目標重量の計算処理
+        if 'body_weight' in request.form and 'level' in request.form:
+            gender = request.form.get('gender')
+            body_weight = float(request.form.get('body_weight'))
+            height = float(request.form.get('height'))
+            exercise = request.form.get('exercise')
+            ctx['selected_level'] = request.form.get('level')
+            
+            ctx['target_weights'] = calculate_target_weights(gender, body_weight, exercise)
+            ctx['calculated_target'] = ctx['target_weights'].get(ctx['selected_level'])
+            ctx['bmi_result'] = calculate_bmi(height, body_weight)
+            
+            if ctx['bmi_result'] < 18.5: ctx['bmi_status'] = "低体重（やせ型）"
+            elif ctx['bmi_result'] < 25.0: ctx['bmi_status'] = "普通体重（標準）"
+            else: ctx['bmi_status'] = "肥満（筋肉量が多い可能性もあります）"
+            
+            ctx['active_tab'] = 'calculate'
+            return render_template('index.html', **ctx)
+
+    return render_template('index.html', **ctx)
+
+if __name__ == '__main__':
+    app.run(debug=True)
