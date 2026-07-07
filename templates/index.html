@@ -3,229 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>筋トレ総合管理アプリ</title>
+    <title>Workout Tracker</title>
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f8f9fa; color: #333; }
-        header { background-color: #343a40; color: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { margin: 0; font-size: 20px; }
-        nav { display: flex; }
-        nav button { background: none; border: none; color: #f8f9fa; font-weight: bold; font-size: 16px; margin-left: 20px; cursor: pointer; padding: 5px 10px; }
-        nav button:hover { color: #ffc107; }
-        nav button.active-nav { color: #ffc107; border-bottom: 2px solid #ffc107; }
-        .container { max-width: 800px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 200px; }
-        
-        /* 初期状態でもちゃんと見えるように、基本スタイルを調整 */
-        .tab-content { display: none; }
-        .tab-content.active-content { display: block !important; }
-        
-        h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-top: 0; color: #007bff; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        input, select, .form-btn { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
-        .form-btn { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 20px; }
-        .form-btn:hover { background-color: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border: 1px solid #dee2e6; text-align: left; }
-        th { background-color: #e9ecef; }
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #777777;
+            --primary: #3498db;
+            --primary-hover: #2980b9;
+            --success: #2ecc71;
+            --success-hover: #27ae60;
+            --border: #e1e4e8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #2c3e50;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .card-full {
+            grid-column: 1 / -1;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fcfcfc;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+            width: auto;
+            padding: 8px 16px;
+            font-size: 13px;
+            float: right;
+            margin-bottom: 15px;
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+
+        .target-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .target-item {
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .target-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .target-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--bg-color);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        tr:hover td {
+            background-color: #fcfcfc;
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>🏋️‍♂️ Muscle Tracker Pro</h1>
-        <nav>
-            <button id="btn-history" onclick="switchTab('history')">履歴を見る</button>
-            <button id="btn-record" onclick="switchTab('record')">実績を記録する</button>
-            <button id="btn-calculate" onclick="switchTab('calculate')">目標を計算する</button>
-        </nav>
-    </header>
-
     <div class="container">
-        
-        <div id="tab-history" class="tab-content active-content">
-            <h2>筋トレ実績の履歴</h2>
-            {% if records %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>日付</th>
-                            <th>部位</th>
-                            <th>種目</th>
-                            <th>身長/体重</th>
-                            <th>BMI</th>
-                            <th>重量/回数</th>
-                            <th style="color: #d9534f;">推定1RM 🔥</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in records %}
-                            <tr>
-                                <td>{{ r.date }}</td>
-                                <td>{{ r.part }}</td>
-                                <td>{{ r.exercise }}</td>
-                                <td>{{ r.height }}cm / {{ r.weight }}kg</td>
-                                <td>{{ r.bmi }}</td>
-                                <td>{{ r.weight }}kg × {{ r.reps }}回</td>
-                                <td style="font-weight: bold; color: #d9534f;">{{ r.rm }} kg</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p style="color: #666; text-align: center; margin-top: 30px;">まだ記録がありません。新しく筋トレを記録してみましょう！</p>
-            {% endif %}
-        </div>
+        <header>
+            <h1>🏋️ Workout Tracker</h1>
+        </header>
 
-        <div id="tab-record" class="tab-content">
-            <h2>今日の筋トレを記録する</h2>
-            <form method="POST">
-                <label>日付</label>
-                <input type="date" name="date" value="{{ today }}" required>
-
-                <label>あなたの身長 (cm)</label>
-                <input type="number" step="0.1" name="height" placeholder="例: 170.5" required>
-
-                <label>部位</label>
-                <select name="part" id="part-select" required>
-                    {% for part in exercise_data.keys() %}
-                        <option value="{{ part }}">{{ part }}</option>
-                    {% endfor %}
-                </select>
-
-                <label>種目</label>
-                <select name="exercise" id="exercise-select" required></select>
-
-                <label>扱った重量 (kg)</label>
-                <input type="number" step="0.1" name="weight" placeholder="例: 60.0" required>
-
-                <label>挙げた回数 (Reps)</label>
-                <input type="number" name="reps" placeholder="例: 10" required>
-
-                <button type="submit" class="form-btn">記録を保存する</button>
-            </form>
-
-            <hr style="margin-top: 40px; border: 0; border-top: 1px dashed #ccc;">
-
-            <h3>➕ 新しい種目を追加する</h3>
-            <form method="POST" style="background: #f1f3f5; padding: 15px; border-radius: 6px;">
-                <input type="hidden" name="add_exercise" value="1">
-                <label>追加する部位</label>
-                <select name="new_part" required>
-                    {% for part in exercise_data.keys() %}
-                        <option value="{{ part }}">{{ part }}</option>
-                    {% endfor %}
-                </select>
-                <label>新しい種目名</label>
-                <input type="text" name="new_exercise" placeholder="例: ブルガリアンスクワット" required>
-                <button type="submit" class="form-btn" style="background-color: #28a745;">種目を追加する</button>
-            </form>
-        </div>
-
-        <div id="tab-calculate" class="tab-content">
-            <h2>目標重量の設定・計算</h2>
-            <p style="color: #666; font-size: 14px;">性別・身長・体重から、目標挙上重量を自動設定します。</p>
-
-            <form method="POST" style="margin-top: 20px;">
-                <label>性別</label>
-                <select name="gender" required>
-                    <option value="male">男性</option>
-                    <option value="female">女性</option>
-                </select>
-
-                <label>身長 (cm)</label>
-                <input type="number" step="0.1" name="height" placeholder="例: 171.5" required>
-
-                <label>現在の体重 (kg)</label>
-                <input type="number" step="0.1" name="body_weight" placeholder="例: 65.0" required>
-
-                <label>挑戦・設定したい種目</label>
-                <select name="exercise" required>
-                    {% for ex in all_exercises %}
-                        <option value="{{ ex }}">{{ ex }}</option>
-                    {% endfor %}
-                </select>
-
-                <label>目指すターゲットレベル</label>
-                <select name="level" required>
-                    <option value="初級者">初級者</option>
-                    <option value="中級者">中級者</option>
-                    <option value="上級者">上級者</option>
-                </select>
-
-                <button type="submit" class="form-btn">目標重量を自動設定する</button>
-            </form>
-
-            {% if calculated_target %}
-                <div style="margin-top: 25px; padding: 20px; background-color: #f0f7ff; border: 1px solid #b3d8ff; border-radius: 8px;">
-                    <h3>🎯 あなたの分析・目標設定結果</h3>
-                    <div style="background: white; padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #28a745;">
-                        <p style="margin: 0;">算出BMI: <strong>{{ bmi_result }}</strong> （判定: {{ bmi_status }}）</p>
+        <div class="dashboard">
+            <div class="card">
+                <h2>マイデータ & 目標重量</h2>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>身長 (cm)</label>
+                        <input type="number" id="height" value="170" step="0.1">
                     </div>
-                    <p>選択した <strong>{{ selected_level }}</strong> の設定目標：</p>
-                    <p style="font-size: 32px; font-weight: bold; color: #d9534f; margin: 0 0 20px 0;">{{ calculated_target }} kg</p>
-                    <div style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 5px;">
-                        <h4>📊 全レベルの目安</h4>
-                        <ul>
-                            <li><strong>初級者:</strong> {{ target_weights['初級者'] }} kg</li>
-                            <li><strong>中級者:</strong> {{ target_weights['中級者'] }} kg</li>
-                            <li><strong>上級者:</strong> {{ target_weights['上級者'] }} kg</li>
-                        </ul>
+                    <div class="input-group">
+                        <label>体重 (kg)</label>
+                        <input type="number" id="weight" value="65" step="0.1">
                     </div>
                 </div>
-            {% endif %}
-        </div>
+                
+                <div class="target-grid" id="target-grid">
+                    </div>
+            </div>
 
+            <div class="card">
+                <h2>トレーニング記録</h2>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>日付</label>
+                        <input type="date" id="date">
+                    </div>
+                    <div class="input-group">
+                        <label>種目名</label>
+                        <select id="exercise">
+                            <option value="ベンチプレス">ベンチプレス</option>
+                            <option value="スクワット">スクワット</option>
+                            <option value="デッドリフト">デッドリフト</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>重量 (kg)</label>
+                        <input type="number" id="record-weight" value="20" step="2.5">
+                    </div>
+                    <div class="input-group">
+                        <label>回数 (Reps)</label>
+                        <input type="number" id="reps" value="10">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="saveRecord()">記録を保存</button>
+            </div>
+
+            <div class="card card-full">
+                <button class="btn btn-success" onclick="downloadCSV()">📥 CSVエクスポート</button>
+                <h2>トレーニング履歴</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日付</th>
+                                <th>種目名</th>
+                                <th>重量 (kg)</th>
+                                <th>回数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="record-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        function switchTab(tabName) {
-            // すべてのコンテンツをいったん非表示にする
-            const contents = document.querySelectorAll('.tab-content');
-            contents.forEach(el => el.style.display = 'none');
-            contents.forEach(el => el.classList.remove('active-content'));
-            
-            // すべてのナビボタンの選択中スタイルを外す
-            document.querySelectorAll('nav button').forEach(el => el.classList.remove('active-nav'));
-            
-            // 選択されたタブだけを表示する
-            const targetContent = document.getElementById('tab-' + tabName);
-            if (targetContent) {
-                targetContent.style.display = 'block';
-                targetContent.classList.add('active-content');
-            }
-            
-            const targetBtn = document.getElementById('btn-' + tabName);
-            if (targetBtn) {
-                targetBtn.classList.add('active-nav');
-            }
+        document.getElementById('date').valueAsDate = new Date();
+
+        // --- 目標重量の自動計算 ---
+        function calculateTargets() {
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
+            const bench = (weight * 0.8).toFixed(1);
+            const squat = (weight * 1.2).toFixed(1);
+            const dead = (weight * 1.2).toFixed(1);
+
+            const grid = document.getElementById('target-grid');
+            grid.innerHTML = `
+                <div class="target-item"><div class="target-label">ベンチ</div><div class="target-value">${bench}kg</div></div>
+                <div class="target-item"><div class="target-label">スクワット</div><div class="target-value">${squat}kg</div></div>
+                <div class="target-item"><div class="target-label">デッド</div><div class="target-value">${dead}kg</div></div>
+            `;
         }
 
-        const exerciseData = {{ exercise_data | tojson if exercise_data else '{}' }};
-        const partSelect = document.getElementById('part-select');
-        const exerciseSelect = document.getElementById('exercise-select');
+        document.getElementById('weight').addEventListener('input', calculateTargets);
+        calculateTargets();
 
-        function updateExercises() {
-            if (!partSelect || !exerciseSelect) return;
-            const selectedPart = partSelect.value;
-            const exercises = exerciseData[selectedPart] || [];
-            exerciseSelect.innerHTML = '';
-            exercises.forEach(ex => {
-                const option = document.createElement('option');
-                option.value = ex;
-                option.textContent = ex;
-                exerciseSelect.appendChild(option);
+        // --- データの保存・表示 ---
+        const STORAGE_KEY = 'workout_records';
+
+        function getRecords() {
+            const json = localStorage.getItem(STORAGE_KEY);
+            return json ? JSON.parse(json) : [];
+        }
+
+        function renderTable() {
+            const records = getRecords();
+            const tbody = document.getElementById('record-table-body');
+            tbody.innerHTML = '';
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">記録がありません</td></tr>`;
+                return;
+            }
+
+            [...records].reverse().forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${r.date}</td><td>${r.exercise}</td><td>${r.weight}</td><td>${r.reps}</td>`;
+                tbody.appendChild(tr);
             });
         }
 
-        if (partSelect) {
-            partSelect.addEventListener('change', updateExercises);
+        function saveRecord() {
+            const date = document.getElementById('date').value;
+            const exercise = document.getElementById('exercise').value;
+            const weight = document.getElementById('record-weight').value;
+            const reps = document.getElementById('reps').value;
+
+            if(!date || !weight || !reps) return;
+
+            const records = getRecords();
+            records.push({ date, exercise, weight, reps });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            
+            renderTable();
         }
-        
-        window.addEventListener('DOMContentLoaded', () => {
-            updateExercises();
-            // Pythonから渡されたタブ、またはデフォルトで履歴タブを開く
-            const initialTab = '{{ active_tab }}' || 'history';
-            switchTab(initialTab);
-        });
+
+        renderTable();
+
+        // --- CSVエクスポート ---
+        function downloadCSV() {
+            const records = getRecords();
+            if(records.length === 0) return;
+
+            let csv = "日付,種目名,重量(kg),回数\n";
+            records.forEach(r => { csv += `${r.date},${r.exercise},${r.weight},${r.reps}\n`; });
+
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "workout_records.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
     </script>
 </body>
 </html>
