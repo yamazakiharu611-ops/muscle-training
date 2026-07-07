@@ -1,119 +1,73 @@
-from flask import Flask, render_template, request, redirect, url_for
+import streamlit as st
+import pandas as pd
+import os
 from datetime import datetime
 
-app = Flask(__name__)
+# 保存先CSVファイルのパス
+CSV_FILE = 'workout_records.csv'
 
-# 部位ごとの種目データ
-EXERCISE_DATA = {
-    '胸': ['ベンチプレス', 'インクラインダンベルプレス', 'ダンベルフライ', 'プッシュアップ'],
-    '腕': ['バーベルカール', 'インクラインダンベルカール', 'スカルクラッシャー'],
-    '肩': ['ショルダープレス', 'サイドレイズ', 'フロントレイズ'],
-    '背中': ['デッドリフト', 'ラットプルダウン', '懸垂（チンニング）'],
-    '足': ['スクワット', 'レッグプレス', 'レッグエクステンション']
-}
+# アプリ起動時にCSVファイルが存在しない場合は、ヘッダーのみ作成
+if not os.path.exists(CSV_FILE):
+    df_init = pd.DataFrame(columns=['日付', '種目名', '重量(kg)', '回数'])
+    df_init.to_csv(CSV_FILE, index=False)
 
-records = []
+st.title("🏋️ 筋トレ記録＆目標管理アプリ")
 
-# 1RM（最大挙上重量）計算
-def calculate_1rm(weight, reps):
-    if reps == 1: return weight
-    return round(weight * (1 + reps / 30), 1)
+# --- 1. 体型データ入力と目標重量計算 ---
+st.header("1. 体型データと目標重量")
+col1, col2 = st.columns(2)
+with col1:
+    height = st.number_input("身長 (cm)", min_value=100.0, max_value=250.0, value=170.0, step=0.1)
+with col2:
+    weight = st.number_input("体重 (kg)", min_value=30.0, max_value=200.0, value=65.0, step=0.1)
 
-# BMI計算
-def calculate_bmi(height_cm, weight_kg):
-    if height_cm <= 0: return 0
-    height_m = height_cm / 100
-    return round(weight_kg / (height_m * height_m), 1)
+# 目標重量の算出ロジック（体重をベースにした目安）
+target_bench = weight * 0.8
+target_squat = weight * 1.2
+target_deadlift = weight * 1.2
 
-# 身長・体重・性別をベースにした目標重量計算（体重比ロジック）
-def calculate_target_weights(gender, body_weight, exercise):
-    # 種目ごとの体重倍率 [初級, 中級, 上級]
-    if exercise == 'ベンチプレス':
-        factors = [0.7, 1.0, 1.5] if gender == 'male' else [0.35, 0.5, 0.75]
-    elif exercise == 'スクワット':
-        factors = [1.0, 1.5, 2.0] if gender == 'male' else [0.6, 1.0, 1.4]
-    elif exercise == 'デッドリフト':
-        factors = [1.2, 1.8, 2.3] if gender == 'male' else [0.7, 1.2, 1.7]
-    else:
-        # その他の種目（ダンベルやマシンなど）の標準目安
-        factors = [0.4, 0.6, 0.9] if gender == 'male' else [0.2, 0.35, 0.5]
-        
-    return {
-        '初級者': round(body_weight * factors[0], 1),
-        '中級者': round(body_weight * factors[1], 1),
-        '上級者': round(body_weight * factors[2], 1)
-    }
+st.subheader("💡 あなたへのおすすめ目標重量")
+st.markdown(f"""
+- **ベンチプレス**: `{target_bench:.1f} kg`
+- **スクワット**: `{target_squat:.1f} kg`
+- **デッドリフト**: `{target_deadlift:.1f} kg`
+""")
+st.caption("※目標重量は一般的な初心者の目安（体重比）として算出しています。")
 
-@app.route('/')
-def index():
-    return render_template('index.html', records=records)
+st.divider() # 区切り線
 
-@app.route('/record', methods=['GET', 'POST'])
-def record():
-    if request.method == 'POST':
-        if 'add_exercise' in request.form:
-            new_part = request.form.get('new_part')
-            new_exercise = request.form.get('new_exercise').strip()
-            if new_exercise and new_exercise not in EXERCISE_DATA[new_part]:
-                EXERCISE_DATA[new_part].append(new_exercise)
-            return redirect(url_for('record'))
-
-        date = request.form.get('date')
-        part = request.form.get('part')
-        exercise = request.form.get('exercise')
-        weight = float(request.form.get('weight'))
-        reps = int(request.form.get('reps'))
-        height = float(request.form.get('height'))
-        
-        rm = calculate_1rm(weight, reps)
-        bmi = calculate_bmi(height, weight)
-        
-        records.append({
-            'date': date, 'part': part, 'exercise': exercise, 
-            'weight': weight, 'reps': reps, 'height': height, 
-            'rm': rm, 'bmi': bmi
-        })
-        return redirect(url_for('index'))
-        
-    today = datetime.today().strftime('%Y-%m-%d')
-    return render_template('record.html', today=today, exercise_data=EXERCISE_DATA)
-
-@app.route('/calculate', methods=['GET', 'POST'])
-def calculate():
-    target_weights = None
-    selected_level = None
-    calculated_target = None
-    bmi_result = None
-    bmi_status = None
+# --- 2. 筋トレ実績の入力と保存 ---
+st.header("2. 実績の記録")
+with st.form("record_form"):
+    date = st.date_input("日付", value=datetime.today())
+    exercise = st.selectbox("種目名", ["ベンチプレス", "スクワット", "デッドリフト", "その他"])
+    weight_val = st.number_input("重量 (kg)", min_value=0.0, max_value=500.0, value=20.0, step=2.5)
+    reps = st.number_input("回数 (レップ数)", min_value=1, max_value=100, value=10, step=1)
     
-    all_exercises = []
-    for exercises in EXERCISE_DATA.values(): all_exercises.extend(exercises)
-    all_exercises = sorted(list(set(all_exercises)))
+    submit_button = st.form_submit_button("保存する")
 
-    if request.method == 'POST':
-        gender = request.form.get('gender')
-        body_weight = float(request.form.get('body_weight'))
-        height = float(request.form.get('height'))
-        exercise = request.form.get('exercise')
-        selected_level = request.form.get('level')
-        
-        # 各種計算の実行
-        target_weights = calculate_target_weights(gender, body_weight, exercise)
-        calculated_target = target_weights.get(selected_level)
-        bmi_result = calculate_bmi(height, body_weight)
-        
-        # BMI判定
-        if bmi_result < 18.5: bmi_status = "低体重（やせ型）"
-        elif bmi_result < 25.0: bmi_status = "普通体重（標準）"
-        else: bmi_status = "肥満（筋肉量が多い可能性もあります）"
+if submit_button:
+    # フォームが送信されたら、データをDataFrameにしてCSVに追記
+    new_data = pd.DataFrame({
+        '日付': [date],
+        '種目名': [exercise],
+        '重量(kg)': [weight_val],
+        '回数': [reps]
+    })
+    new_data.to_csv(CSV_FILE, mode='a', header=False, index=False)
+    st.success("✨ 記録を保存しました！")
 
-    return render_template('calculate.html', 
-                           all_exercises=all_exercises, 
-                           target_weights=target_weights,
-                           selected_level=selected_level,
-                           calculated_target=calculated_target,
-                           bmi_result=bmi_result,
-                           bmi_status=bmi_status)
+st.divider()
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# --- 3. 過去の記録一覧表示 ---
+st.header("3. 過去の記録一覧")
+try:
+    # CSVからデータを読み込んで表示
+    df_records = pd.read_csv(CSV_FILE)
+    if not df_records.empty:
+        # 最新の記録が上に来るように逆順で表示
+        st.dataframe(df_records.iloc[::-1], use_container_width=True, hide_index=True)
+    else:
+        st.info("まだ記録がありません。最初の記録を追加してみましょう！")
+except Exception as e:
+    st.error("データの読み込みにエラーが発生しました。")
