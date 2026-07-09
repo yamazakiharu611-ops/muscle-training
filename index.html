@@ -309,25 +309,36 @@
     <script>
         document.getElementById('date').valueAsDate = new Date();
 
-        // --- 身長・体重を加味した目標の自動計算 ---
+        // --- 身長・体重をどちらも加味した目標の自動計算 ---
         function calculateTargets() {
             const height = parseFloat(document.getElementById('height').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0;
 
-            // 身長(m)から健康的な目標体重（適正体重 BMI 22）を算出
-            const heightM = height / 100;
-            const targetWeight = (heightM * heightM * 22).toFixed(1);
+            if (height === 0 || weight === 0) return;
 
-            // 身長から算出した「目標体重」を基準に、ビッグスリーの目標重量を計算
-            const bench = (targetWeight * 0.8).toFixed(1);
-            const squat = (targetWeight * 1.2).toFixed(1);
-            const dead = (targetWeight * 1.2).toFixed(1);
+            // 1. 身長から理想体重（適正 BMI 22）を算出
+            const heightM = height / 100;
+            const idealWeight = heightM * heightM * 22;
+
+            // 2. 身長による理想体重と、現在のリアルな体重の「平均値」を取る（双方をハイブリッド加味）
+            const blendedWeight = (weight + idealWeight) / 2;
+
+            // 3. ミックスした基準体重をもとに、各種目の目標重量を計算
+            const bench = (blendedWeight * 0.8).toFixed(1);
+            const squat = (blendedWeight * 1.2).toFixed(1);
+            const dead = (blendedWeight * 1.2).toFixed(1);
 
             const grid = document.getElementById('target-grid');
             grid.innerHTML = `
-                <div class="target-item" style="grid-column: 1 / -1; background-color: #e8f6f3; border: 1px solid #a3e4d7;">
-                    <div class="target-label" style="color: #16a085;">身長から算出した目標体重 (BMI 22)</div>
-                    <div class="target-value" style="color: #16a085;">${targetWeight} kg</div>
+                <div class="target-item" style="grid-column: 1 / -1; background-color: #e8f6f3; border: 1px solid #a3e4d7; display: flex; justify-content: space-around; padding: 10px;">
+                    <div>
+                        <div class="target-label" style="color: #16a085;">理想体重 (BMI 22)</div>
+                        <div class="target-value" style="color: #16a085; font-size: 15px;">${idealWeight.toFixed(1)} kg</div>
+                    </div>
+                    <div style="border-left: 1px solid #a3e4d7; padding-left: 20px;">
+                        <div class="target-label" style="color: #16a085;">算出の基準（ハイブリッド体重）</div>
+                        <div class="target-value" style="color: #16a085; font-size: 15px;">${blendedWeight.toFixed(1)} kg</div>
+                    </div>
                 </div>
                 <div class="target-item"><div class="target-label">ベンチ目標</div><div class="target-value">${bench}kg</div></div>
                 <div class="target-item"><div class="target-label">スクワット目標</div><div class="target-value">${squat}kg</div></div>
@@ -335,7 +346,7 @@
             `;
         }
 
-        // 身長または体重が変わったら即座に再計算
+        // 身長・体重どちらが変わっても即座に連動
         document.getElementById('height').addEventListener('input', calculateTargets);
         document.getElementById('weight').addEventListener('input', calculateTargets);
         calculateTargets();
