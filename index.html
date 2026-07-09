@@ -204,8 +204,9 @@
         </header>
 
         <div class="dashboard">
+            <!-- 体型・目標カード -->
             <div class="card">
-                <h2>マイデータ & 目標重量</h2>
+                <h2>マイデータ & 目標設定</h2>
                 <div class="input-row">
                     <div class="input-group">
                         <label>身長 (cm)</label>
@@ -218,9 +219,11 @@
                 </div>
                 
                 <div class="target-grid" id="target-grid">
-                    </div>
+                    <!-- JSで動的に生成 -->
+                </div>
             </div>
 
+            <!-- 実績入力カード -->
             <div class="card">
                 <h2>トレーニング記録</h2>
                 <div class="input-row">
@@ -279,6 +282,7 @@
                 <button class="btn btn-primary" onclick="saveRecord()">記録を保存</button>
             </div>
 
+            <!-- 履歴一覧カード -->
             <div class="card card-full">
                 <button class="btn btn-success" onclick="downloadCSV()">📥 CSVエクスポート</button>
                 <h2>トレーニング履歴</h2>
@@ -294,7 +298,8 @@
                             </tr>
                         </thead>
                         <tbody id="record-table-body">
-                            </tbody>
+                            <!-- JSで動的に生成 -->
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -304,21 +309,34 @@
     <script>
         document.getElementById('date').valueAsDate = new Date();
 
-        // --- 目標重量の自動計算 ---
+        // --- 身長・体重を加味した目標の自動計算 ---
         function calculateTargets() {
+            const height = parseFloat(document.getElementById('height').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0;
-            const bench = (weight * 0.8).toFixed(1);
-            const squat = (weight * 1.2).toFixed(1);
-            const dead = (weight * 1.2).toFixed(1);
+
+            // 身長(m)から健康的な目標体重（適正体重 BMI 22）を算出
+            const heightM = height / 100;
+            const targetWeight = (heightM * heightM * 22).toFixed(1);
+
+            // 身長から算出した「目標体重」を基準に、ビッグスリーの目標重量を計算
+            const bench = (targetWeight * 0.8).toFixed(1);
+            const squat = (targetWeight * 1.2).toFixed(1);
+            const dead = (targetWeight * 1.2).toFixed(1);
 
             const grid = document.getElementById('target-grid');
             grid.innerHTML = `
-                <div class="target-item"><div class="target-label">ベンチ</div><div class="target-value">${bench}kg</div></div>
-                <div class="target-item"><div class="target-label">スクワット</div><div class="target-value">${squat}kg</div></div>
-                <div class="target-item"><div class="target-label">デッド</div><div class="target-value">${dead}kg</div></div>
+                <div class="target-item" style="grid-column: 1 / -1; background-color: #e8f6f3; border: 1px solid #a3e4d7;">
+                    <div class="target-label" style="color: #16a085;">身長から算出した目標体重 (BMI 22)</div>
+                    <div class="target-value" style="color: #16a085;">${targetWeight} kg</div>
+                </div>
+                <div class="target-item"><div class="target-label">ベンチ目標</div><div class="target-value">${bench}kg</div></div>
+                <div class="target-item"><div class="target-label">スクワット目標</div><div class="target-value">${squat}kg</div></div>
+                <div class="target-item"><div class="target-label">デッド目標</div><div class="target-value">${dead}kg</div></div>
             `;
         }
 
+        // 身長または体重が変わったら即座に再計算
+        document.getElementById('height').addEventListener('input', calculateTargets);
         document.getElementById('weight').addEventListener('input', calculateTargets);
         calculateTargets();
 
@@ -341,7 +359,6 @@
             }
 
             [...records].reverse().forEach(r => {
-                // 過去にRMデータがない古い記録のためのフォールバック計算
                 const rmVal = r.rm ? parseFloat(r.rm).toFixed(1) : (r.weight * (1 + r.reps / 30)).toFixed(1);
                 
                 const tr = document.createElement('tr');
@@ -364,8 +381,6 @@
 
             if(!date || isNaN(weight) || isNaN(reps)) return;
 
-            // 推定1RMの計算 (Epleyの式: weight * (1 + reps / 30))
-            // 1レップの場合はそのままの重量を1RMとする
             const rm = reps === 1 ? weight : weight * (1 + reps / 30);
             const calculatedRm = parseFloat(rm.toFixed(1));
 
