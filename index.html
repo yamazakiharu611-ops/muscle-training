@@ -204,17 +204,17 @@
         </header>
 
         <div class="dashboard">
-            <!-- 体型・目標カード -->
+            <!-- 体型・目標カード (oninputを追加して、入力の瞬間に確実にJSを動かす) -->
             <div class="card">
                 <h2>マイデータ & 目標設定</h2>
                 <div class="input-row">
                     <div class="input-group">
                         <label>身長 (cm)</label>
-                        <input type="number" id="height" value="170" step="0.1">
+                        <input type="number" id="height" value="170" step="0.1" oninput="calculateTargets()">
                     </div>
                     <div class="input-group">
                         <label>体重 (kg)</label>
-                        <input type="number" id="weight" value="65" step="0.1">
+                        <input type="number" id="weight" value="65" step="0.1" oninput="calculateTargets()">
                     </div>
                 </div>
                 
@@ -309,21 +309,21 @@
     <script>
         document.getElementById('date').valueAsDate = new Date();
 
-        // --- 身長・体重をどちらも加味した目標の自動計算 ---
+        // --- 身長と体重の両方を確実に加味する計算式 ---
         function calculateTargets() {
             const height = parseFloat(document.getElementById('height').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0;
 
             if (height === 0 || weight === 0) return;
 
-            // 1. 身長から理想体重（適正 BMI 22）を算出
+            // 1. 身長から適正体重(BMI 22)を計算
             const heightM = height / 100;
             const idealWeight = heightM * heightM * 22;
 
-            // 2. 身長による理想体重と、現在のリアルな体重の「平均値」を取る（双方をハイブリッド加味）
-            const blendedWeight = (weight + idealWeight) / 2;
+            // 2. 適正体重(60%) と 現在の体重(40%) をブレンド（どちらを動かしても必ず数値が変化します）
+            const blendedWeight = (idealWeight * 0.6) + (weight * 0.4);
 
-            // 3. ミックスした基準体重をもとに、各種目の目標重量を計算
+            // 3. ブレンドされた体重をベースに目標を決定
             const bench = (blendedWeight * 0.8).toFixed(1);
             const squat = (blendedWeight * 1.2).toFixed(1);
             const dead = (blendedWeight * 1.2).toFixed(1);
@@ -332,11 +332,11 @@
             grid.innerHTML = `
                 <div class="target-item" style="grid-column: 1 / -1; background-color: #e8f6f3; border: 1px solid #a3e4d7; display: flex; justify-content: space-around; padding: 10px;">
                     <div>
-                        <div class="target-label" style="color: #16a085;">理想体重 (BMI 22)</div>
+                        <div class="target-label" style="color: #16a085;">理想体重 (適正)</div>
                         <div class="target-value" style="color: #16a085; font-size: 15px;">${idealWeight.toFixed(1)} kg</div>
                     </div>
                     <div style="border-left: 1px solid #a3e4d7; padding-left: 20px;">
-                        <div class="target-label" style="color: #16a085;">算出の基準（ハイブリッド体重）</div>
+                        <div class="target-label" style="color: #16a085;">目標計算の基準（両方加味）</div>
                         <div class="target-value" style="color: #16a085; font-size: 15px;">${blendedWeight.toFixed(1)} kg</div>
                     </div>
                 </div>
@@ -346,9 +346,7 @@
             `;
         }
 
-        // 身長・体重どちらが変わっても即座に連動
-        document.getElementById('height').addEventListener('input', calculateTargets);
-        document.getElementById('weight').addEventListener('input', calculateTargets);
+        // 初回起動時にも実行
         calculateTargets();
 
         // --- データの保存・表示 ---
@@ -371,15 +369,8 @@
 
             [...records].reverse().forEach(r => {
                 const rmVal = r.rm ? parseFloat(r.rm).toFixed(1) : (r.weight * (1 + r.reps / 30)).toFixed(1);
-                
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${r.date}</td>
-                    <td>${r.exercise}</td>
-                    <td>${r.weight} kg</td>
-                    <td>${r.reps} 回</td>
-                    <td style="font-weight:bold; color:#2c3e50;">${rmVal} kg</td>
-                `;
+                tr.innerHTML = `<td>${r.date}</td><td>${r.exercise}</td><td>${r.weight} kg</td><td>${r.reps} 回</td><td style="font-weight:bold; color:#2c3e50;">${rmVal} kg</td>`;
                 tbody.appendChild(tr);
             });
         }
