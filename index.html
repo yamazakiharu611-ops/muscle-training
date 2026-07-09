@@ -231,9 +231,37 @@
                     <div class="input-group">
                         <label>種目名</label>
                         <select id="exercise">
-                            <option value="ベンチプレス">ベンチプレス</option>
-                            <option value="スクワット">スクワット</option>
-                            <option value="デッドリフト">デッドリフト</option>
+                            <optgroup label="ビッグスリー">
+                                <option value="ベンチプレス">ベンチプレス</option>
+                                <option value="スクワット">スクワット</option>
+                                <option value="デッドリフト">デッドリフト</option>
+                            </optgroup>
+                            <optgroup label="胸 (Chest)">
+                                <option value="インクラインダンベルプレス">インクラインダンベルプレス</option>
+                                <option value="ダンベルフライ">ダンベルフライ</option>
+                                <option value="ディップス">ディップス</option>
+                            </optgroup>
+                            <optgroup label="背中 (Back)">
+                                <option value="懸垂 (チンニング)">懸垂 (チンニング)</option>
+                                <option value="ラットプルダウン">ラットプルダウン</option>
+                                <option value="ベントオーバーロウ">ベントオーバーロウ</option>
+                            </optgroup>
+                            <optgroup label="肩 (Shoulders)">
+                                <option value="ショルダープレス">ショルダープレス</option>
+                                <option value="サイドレイズ">サイドレイズ</option>
+                                <option value="リアレイズ">リアレイズ</option>
+                            </optgroup>
+                            <optgroup label="腕 (Arms)">
+                                <option value="バーベルカール">バーベルカール</option>
+                                <option value="インクラインカール">インクラインカール</option>
+                                <option value="スカルクラッシャー">スカルクラッシャー</option>
+                            </optgroup>
+                            <optgroup label="足・臀部 (Legs)">
+                                <option value="レッグプレス">レッグプレス</option>
+                                <option value="レッグエクステンション">レッグエクステンション</option>
+                                <option value="レッグカール">レッグカール</option>
+                                <option value="ブルガリアンスクワット">ブルガリアンスクワット</option>
+                            </optgroup>
                             <option value="その他">その他</option>
                         </select>
                     </div>
@@ -262,6 +290,7 @@
                                 <th>種目名</th>
                                 <th>重量 (kg)</th>
                                 <th>回数</th>
+                                <th>推定1RM (kg)</th>
                             </tr>
                         </thead>
                         <tbody id="record-table-body">
@@ -307,13 +336,22 @@
             tbody.innerHTML = '';
 
             if (records.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">記録がありません</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">記録がありません</td></tr>`;
                 return;
             }
 
             [...records].reverse().forEach(r => {
+                // 過去にRMデータがない古い記録のためのフォールバック計算
+                const rmVal = r.rm ? parseFloat(r.rm).toFixed(1) : (r.weight * (1 + r.reps / 30)).toFixed(1);
+                
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${r.date}</td><td>${r.exercise}</td><td>${r.weight}</td><td>${r.reps}</td>`;
+                tr.innerHTML = `
+                    <td>${r.date}</td>
+                    <td>${r.exercise}</td>
+                    <td>${r.weight} kg</td>
+                    <td>${r.reps} 回</td>
+                    <td style="font-weight:bold; color:#2c3e50;">${rmVal} kg</td>
+                `;
                 tbody.appendChild(tr);
             });
         }
@@ -321,13 +359,18 @@
         function saveRecord() {
             const date = document.getElementById('date').value;
             const exercise = document.getElementById('exercise').value;
-            const weight = document.getElementById('record-weight').value;
-            const reps = document.getElementById('reps').value;
+            const weight = parseFloat(document.getElementById('record-weight').value);
+            const reps = parseInt(document.getElementById('reps').value);
 
-            if(!date || !weight || !reps) return;
+            if(!date || isNaN(weight) || isNaN(reps)) return;
+
+            // 推定1RMの計算 (Epleyの式: weight * (1 + reps / 30))
+            // 1レップの場合はそのままの重量を1RMとする
+            const rm = reps === 1 ? weight : weight * (1 + reps / 30);
+            const calculatedRm = parseFloat(rm.toFixed(1));
 
             const records = getRecords();
-            records.push({ date, exercise, weight, reps });
+            records.push({ date, exercise, weight, reps, rm: calculatedRm });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
             
             renderTable();
@@ -340,8 +383,11 @@
             const records = getRecords();
             if(records.length === 0) return;
 
-            let csv = "日付,種目名,重量(kg),回数\n";
-            records.forEach(r => { csv += `${r.date},${r.exercise},${r.weight},${r.reps}\n`; });
+            let csv = "日付,種目名,重量(kg),回数,推定1RM(kg)\n";
+            records.forEach(r => { 
+                const rmVal = r.rm ? r.rm : (r.weight * (1 + r.reps / 30)).toFixed(1);
+                csv += `${r.date},${r.exercise},${r.weight},${r.reps},${rmVal}\n`; 
+            });
 
             const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
