@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout Tracker</title>
+    <title>Workout Tracker (Advanced)</title>
     <style>
         :root {
             --bg-color: #f4f6f9;
             --card-bg: #ffffff;
             --text-main: #333333;
             --text-muted: #777777;
-            --primary: #3498db;
-            --primary-hover: #2980b9;
+            --primary: #e74c3c; /* 上級者向けに情熱的な赤系に変更 */
+            --primary-hover: #c0392b;
             --success: #2ecc71;
             --success-hover: #27ae60;
             --border: #e1e4e8;
@@ -200,13 +200,13 @@
 
     <div class="container">
         <header>
-            <h1>🏋️ Workout Tracker</h1>
+            <h1>🏋️ Workout Tracker <span style="font-size: 16px; color: #e74c3c; font-weight: bold; vertical-align: middle;">[ADVANCED]</span></h1>
         </header>
 
         <div class="dashboard">
-            <!-- 体型・目標カード (oninputを追加して、入力の瞬間に確実にJSを動かす) -->
+            <!-- 体型・目標カード -->
             <div class="card">
-                <h2>マイデータ & 目標設定</h2>
+                <h2>マイデータ & 上級者目標設定</h2>
                 <div class="input-row">
                     <div class="input-group">
                         <label>身長 (cm)</label>
@@ -309,7 +309,7 @@
     <script>
         document.getElementById('date').valueAsDate = new Date();
 
-        // --- 身長と体重の両方を確実に加味する計算式 ---
+        // --- 身長と体重の両方を加味する上級者計算式 ---
         function calculateTargets() {
             const height = parseFloat(document.getElementById('height').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0;
@@ -320,33 +320,32 @@
             const heightM = height / 100;
             const idealWeight = heightM * heightM * 22;
 
-            // 2. 適正体重(60%) と 現在の体重(40%) をブレンド（どちらを動かしても必ず数値が変化します）
+            // 2. 適正体重(60%) と 現在の体重(40%) をブレンド
             const blendedWeight = (idealWeight * 0.6) + (weight * 0.4);
 
-            // 3. ブレンドされた体重をベースに目標を決定
-            const bench = (blendedWeight * 0.8).toFixed(1);
-            const squat = (blendedWeight * 1.2).toFixed(1);
-            const dead = (blendedWeight * 1.2).toFixed(1);
+            // 3. ブレンドされた体重をもとに【上級者レベル】の目標重量を計算
+            const bench = (blendedWeight * 1.5).toFixed(1); // 自重の1.5倍
+            const squat = (blendedWeight * 2.0).toFixed(1); // 自重の2.0倍
+            const dead = (blendedWeight * 2.2).toFixed(1);  // 自重の2.2倍
 
             const grid = document.getElementById('target-grid');
             grid.innerHTML = `
-                <div class="target-item" style="grid-column: 1 / -1; background-color: #e8f6f3; border: 1px solid #a3e4d7; display: flex; justify-content: space-around; padding: 10px;">
+                <div class="target-item" style="grid-column: 1 / -1; background-color: #fdf2e9; border: 1px solid #f5cba7; display: flex; justify-content: space-around; padding: 10px;">
                     <div>
-                        <div class="target-label" style="color: #16a085;">理想体重 (適正)</div>
-                        <div class="target-value" style="color: #16a085; font-size: 15px;">${idealWeight.toFixed(1)} kg</div>
+                        <div class="target-label" style="color: #e67e22;">理想体重 (適正)</div>
+                        <div class="target-value" style="color: #e67e22; font-size: 15px;">${idealWeight.toFixed(1)} kg</div>
                     </div>
-                    <div style="border-left: 1px solid #a3e4d7; padding-left: 20px;">
-                        <div class="target-label" style="color: #16a085;">目標計算の基準（両方加味）</div>
-                        <div class="target-value" style="color: #16a085; font-size: 15px;">${blendedWeight.toFixed(1)} kg</div>
+                    <div style="border-left: 1px solid #f5cba7; padding-left: 20px;">
+                        <div class="target-label" style="color: #e67e22;">目標計算の基準（両方加味）</div>
+                        <div class="target-value" style="color: #e67e22; font-size: 15px;">${blendedWeight.toFixed(1)} kg</div>
                     </div>
                 </div>
-                <div class="target-item"><div class="target-label">ベンチ目標</div><div class="target-value">${bench}kg</div></div>
-                <div class="target-item"><div class="target-label">スクワット目標</div><div class="target-value">${squat}kg</div></div>
-                <div class="target-item"><div class="target-label">デッド目標</div><div class="target-value">${dead}kg</div></div>
+                <div class="target-item"><div class="target-label">上級ベンチ (1.5倍)</div><div class="target-value" style="color: #e74c3c;">${bench}kg</div></div>
+                <div class="target-item"><div class="target-label">上級スクワット (2.0倍)</div><div class="target-value" style="color: #e74c3c;">${squat}kg</div></div>
+                <div class="target-item"><div class="target-label">上級デッド (2.2倍)</div><div class="target-value" style="color: #e74c3c;">${dead}kg</div></div>
             `;
         }
 
-        // 初回起動時にも実行
         calculateTargets();
 
         // --- データの保存・表示 ---
